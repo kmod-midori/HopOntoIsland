@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_notifications"
+        android:shortcutId="capture"
+        android:shortcutLongLabel="@string/capture_shortcut_label"
+        android:shortcutShortLabel="@string/capture_shortcut_label">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="moe.reimu.hopontoisland.CaptureActivity"
+            android:targetPackage="moe.reimu.hopontoisland" />
+    </shortcut>
+</shortcuts>

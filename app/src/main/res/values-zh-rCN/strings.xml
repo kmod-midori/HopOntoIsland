@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">一键上岛</string>
+    <string name="capture_shortcut_label">捕获屏幕文本</string>
+    <string name="noti_channel_default">默认</string>
+    <string name="noti_channel_live">实时通知</string>
+    <string name="test_notification_label">发送测试通知</string>
+    <string name="test_notification_desc">通知可能在切换到其他 App 后才可见。</string>
+    <string name="grant_noti_perm_label">授予通知权限</string>
+    <string name="cannot_post_label">实时通知已被禁用</string>
+    <string name="cannot_post_desc">系统反馈实时通知已被禁用，如果您在开发者选项内启用了实时通知，可以忽略此提示。</string>
+    <string name="model_label">模型</string>
+    <string name="model_url_label">OpenAI 兼容 URL</string>
+    <string name="model_key_label">API 密钥</string>
+    <string name="model_name_label">名称</string>
+    <string name="save_label">保存</string>
+    <string name="saved_msg">已保存</string>
+    <string name="a11y_disabled_label">无障碍服务已禁用</string>
+    <string name="a11y_disabled_desc">无法捕获屏幕上显示的内容。</string>
+</resources>

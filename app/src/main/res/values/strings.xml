@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Hop Onto Island</string>
+    <string name="capture_shortcut_label">Capture</string>
+    <string name="noti_channel_default">Default</string>
+    <string name="noti_channel_live">Live Updates</string>
+    <string name="test_notification_label">Send test noitification</string>
+    <string name="test_notification_desc">You may need to switch to other apps for the notification to be visible.</string>
+    <string name="grant_noti_perm_label">Grant notification permission</string>
+    <string name="cannot_post_label">Live Updates not allowed by system</string>
+    <string name="cannot_post_desc">The system reports that Live Update has been disabled for this app, ignore if you\'ve enabled it in developer settings.</string>
+    <string name="model_label">Model</string>
+    <string name="model_url_label">URL (OpenAI compatible)</string>
+    <string name="model_key_label">API Key</string>
+    <string name="model_name_label">Name</string>
+    <string name="save_label">Save</string>
+    <string name="saved_msg">Saved</string>
+    <string name="a11y_disabled_label">Accessibility service disabled</string>
+    <string name="a11y_disabled_desc">Content displayed on screen will not be captured.</string>
+</resources>
