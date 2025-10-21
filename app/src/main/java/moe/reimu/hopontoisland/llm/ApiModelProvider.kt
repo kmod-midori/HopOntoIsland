@@ -13,7 +13,7 @@ import moe.reimu.hopontoisland.MyApplication
 import moe.reimu.hopontoisland.model.ModelRequest
 import moe.reimu.hopontoisland.model.ModelResponse
 
-class ApiModelProvider : ModelProvider {
+object ApiModelProvider : ModelProvider {
     private val url: String
     private val apiKey: String
     private val modelName: String

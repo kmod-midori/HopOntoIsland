@@ -22,7 +22,6 @@ class ShareActivity : ComponentActivity() {
                         R.drawable.ic_info,
                         "#3DDC84".toColorInt()
                     )
-                    Toast.makeText(this, "Notification posted", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to post notification", e)
                 }

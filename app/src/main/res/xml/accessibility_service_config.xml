@@ -5,4 +5,4 @@
     android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
     android:canRetrieveWindowContent="true"
     android:notificationTimeout="100"
-    android:settingsActivity="com.example.android.accessibility.ServiceSettingsActivity" />
+    android:settingsActivity="moe.reimu.hopontoisland.MainActivity" />

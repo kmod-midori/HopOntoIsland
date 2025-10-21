@@ -33,7 +33,7 @@ object RecognitionProcessor {
             $systemPromptJson
         """.trimIndent()
 
-        val modelResponse = ApiModelProvider().generate(
+        val modelResponse = ApiModelProvider.generate(
             ModelRequest(
                 model = "(placeholder)",
                 temperature = 0.1,
