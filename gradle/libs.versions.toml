@@ -4,11 +4,11 @@ agp = "8.13.0"
 kotlin = "2.2.20"
 coreKtx = "1.17.0"
 kotlinxSerializationJson = "1.9.0"
+ktor = "3.3.1"
 lifecycleRuntimeKtx = "2.9.4"
 activityCompose = "1.11.0"
 activityKtx = "1.11.0"
 composeBom = "2025.10.00"
-okhttpBom = "5.2.1"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -24,9 +24,11 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-okhttp-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor" }
-okhttp = { module = "com.squareup.okhttp3:okhttp" }
-okhttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okhttpBom" }
+ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation" }
+ktor-client-core = { module = "io.ktor:ktor-client-core" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
