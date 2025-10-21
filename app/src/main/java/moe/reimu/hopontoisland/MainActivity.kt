@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
         val shortcut = ShortcutInfoCompat.Builder(this, "capture")
             .setShortLabel(getString(R.string.capture_shortcut_label))
             .setLongLabel(getString(R.string.capture_shortcut_label))
-            .setIcon(IconCompat.createWithResource(this, R.drawable.ic_notifications))
+            .setIcon(IconCompat.createWithResource(this, R.drawable.ic_search_white))
             .setIntent(Intent(this, CaptureActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
