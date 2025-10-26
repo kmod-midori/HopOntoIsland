@@ -26,11 +26,17 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Build application
-        run: ./gradlew --no-daemon app:assembleDebug
+        run: ./gradlew --no-daemon app:assembleDebug :app:lintReportDebug
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload lint results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-results
+          path: app/build/reports/lint-results.xml
 
