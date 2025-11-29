@@ -6,7 +6,8 @@
 ## 使用方法
 1.Gemini模型
 前往[Google AI Studio](https://aistudio.google.com/)
-获取API Key后填入应用中，无需填入URL，模型默认填入"gemini-2.5-flash"，点击保存即可
+获取API Key后填入应用中，无需填入URL，模型默认填入"gemini-2.5-flash"，点击保存即可  
+
 2.OpenAI模型
 待补充
 
