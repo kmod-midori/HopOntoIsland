@@ -3,9 +3,12 @@ package moe.reimu.hopontoisland
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.res.stringResource
 import androidx.core.graphics.toColorInt
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -21,14 +24,17 @@ class CaptureActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        (GlobalScope + Dispatchers.IO).launch {
-            try {
-                doCapture()
-            } catch (e: Exception) {
-                Log.e(TAG, "doCapture failed", e)
-                postErrorNotification(e.message.orEmpty())
+        // 必須延遲！否則你會截到正在收起的面板殘影
+        Handler(Looper.getMainLooper()).postDelayed({
+            (GlobalScope + Dispatchers.IO).launch {
+                try {
+                    doCapture()
+                } catch (e: Exception) {
+                    Log.e(TAG, "doCapture failed", e)
+                    postErrorNotification(e.message.orEmpty())
+                }
             }
-        }
+        }, 500)
 
         finish()
     }
@@ -41,8 +47,8 @@ class CaptureActivity : ComponentActivity() {
 
         postLiveUpdate(
             this,
-            "识别中",
-            "正在识别",
+            getString(R.string.noti_recognizing),
+            getString(R.string.noti_in_recognizing),
             "",
             R.drawable.ic_search,
             "#3DDC84".toColorInt(),
@@ -53,7 +59,7 @@ class CaptureActivity : ComponentActivity() {
         } catch (e: Exception) {
             throw RuntimeException("Failed to obtain a11y text", e)
         }
-        Log.i(TAG, "text = [$dumpedText]")
+        Log.d(TAG, "text = [$dumpedText]")
 
         val entity = RecognitionProcessor.recognizeText(dumpedText)
         if (entity == null) {
@@ -94,8 +100,8 @@ class CaptureActivity : ComponentActivity() {
         val errorColor = colorScheme.errorContainer
         postLiveUpdate(
             this,
-            "识别失败",
-            "识别失败",
+            getString(R.string.noti_error),
+            getString(R.string.noti_error),
             content,
             R.drawable.ic_warning,
             Color.valueOf(errorColor.red, errorColor.green, errorColor.blue).toArgb()
