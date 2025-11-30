@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">一鍵上島</string>
+    <string name="capture_shortcut_label">捕獲螢幕</string>
+    <string name="noti_channel_default">預設</string>
+    <string name="noti_channel_live">即時通知</string>
+    <string name="noti_in_recognizing">正在識別</string>
+    <string name="test_notification_label">發送測試通知</string>
+    <string name="test_notification_desc">通知可能在切換到其他 App 後才可見。</string>
+    <string name="grant_noti_perm_label">授予通知權限</string>
+    <string name="cannot_post_label">即時通知已停用</string>
+    <string name="cannot_post_desc">系統回饋即時通知已停用，如果您在開發者選項內啟用了即時通知，可以忽略此提示。</string>
+    <string name="model_label">模型</string>
+    <string name="model_url_label">URL（OpenAI需要）</string>
+    <string name="model_key_label">API 金鑰</string>
+    <string name="model_name_label">名稱</string>
+    <string name="save_label">儲存</string>
+    <string name="saved_msg">已儲存</string>
+    <string name="a11y_disabled_label">無障礙服務已停用</string>
+    <string name="a11y_disabled_desc">無法擷取螢幕上顯示的內容。</string>
+    <string name="model_provider_label">提供者</string>
+    <string name="noti_error">識別失敗</string>
+    <string name="noti_recognizing">識別中</string>
+</resources>

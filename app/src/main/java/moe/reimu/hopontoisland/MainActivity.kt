@@ -9,6 +9,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,10 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -49,6 +53,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.pm.ShortcutInfoCompat
@@ -72,7 +77,7 @@ class MainActivity : ComponentActivity() {
         val shortcut = ShortcutInfoCompat.Builder(this, "capture")
             .setShortLabel(getString(R.string.capture_shortcut_label))
             .setLongLabel(getString(R.string.capture_shortcut_label))
-            .setIcon(IconCompat.createWithResource(this, R.drawable.ic_search_white))
+            .setIcon(IconCompat.createWithResource(this, R.drawable.crop_free_24px))
             .setIntent(Intent(this, CaptureActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -267,15 +272,19 @@ fun MyIcon(imageVector: ImageVector) {
 @Composable
 fun ModelSettings(snacbkarHostState: SnackbarHostState) {
     val app = MyApplication.getInstance()
+    val apiProvider = listOf("Gemini", "OpenAI")
+    var selectedProvider by remember { mutableStateOf(app.getSettings().modeProvider?:apiProvider[0]) }
     val modelUrlState =
         rememberTextFieldState(initialText = remember { app.getSettings().modelUrl.orEmpty() })
     val modelKeyState =
         rememberTextFieldState(initialText = remember { app.getSettings().modelKey.orEmpty() })
     val modelNameState =
         rememberTextFieldState(initialText = remember { app.getSettings().modelName.orEmpty() })
-    val settingsValid = modelUrlState.text.startsWith("http") &&
+
+    val settingsValid = (if(selectedProvider == "OpenAI") modelUrlState.text.startsWith("http") else true) &&
             modelKeyState.text.isNotBlank() &&
             modelNameState.text.isNotBlank()
+
     val scope = rememberCoroutineScope()
 
     Column {
@@ -284,6 +293,12 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(16.dp))
+        ExposedDropdownSelectionBox(
+            selectedOption = selectedProvider,
+            onSelectedOptionChanged = { selectedProvider = it },
+            options = apiProvider,
+            label = stringResource(R.string.model_provider_label)
+        )
         TextField(
             state = modelUrlState,
             lineLimits = TextFieldLineLimits.SingleLine,
@@ -307,6 +322,7 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
             scope.launch {
                 withContext(Dispatchers.IO) {
                     val settings = app.getSettings()
+                    settings.modeProvider = selectedProvider
                     settings.modelUrl = modelUrlState.text.toString()
                     settings.modelKey = modelKeyState.text.toString()
                     settings.modelName = modelNameState.text.toString()
@@ -318,5 +334,90 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
         }, enabled = settingsValid) {
             Text(stringResource(R.string.save_label))
         }
+    }
+}
+
+
+// 示例数据
+//private val apiProvider = listOf("Gemini", "OpenAI")
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExposedDropdownSelectionBox(
+    modifier: Modifier = Modifier,
+    selectedOption: String,
+    onSelectedOptionChanged: (String) -> Unit,
+    options: List<String>,
+    label: String
+) {
+    // 状态 1: 控制菜单的展开/收起
+    var expanded by remember { mutableStateOf(false) }
+
+    // 状态 2: 存储当前选中的文本
+//    var selectedText by remember { mutableStateOf(options[0]) }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+    ) {
+        // 核心组件：ExposedDropdownMenuBox
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = {
+                // 点击时切换展开状态
+                expanded = !expanded
+            }
+        ) {
+            // 1. 下拉框的显示部分 (TextField)
+            // menuAnchor() 必须应用于此处的 TextField 或其父级
+            TextField(
+                // TextField 必须设置 menuAnchor()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                value = selectedOption,
+                onValueChange = {}, // 通常只显示，不直接编辑
+                readOnly = true, // 只读，防止用户手动输入
+                label = { Text(label) },
+                // 尾部图标：显示一个下拉箭头
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                // 使用 Material 3 的默认样式
+                colors = ExposedDropdownMenuDefaults.textFieldColors()
+            )
+
+            // 2. 实际的下拉菜单 (DropdownMenu)
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = {
+                    // 点击菜单外部时收起
+                    expanded = false
+                }
+            ) {
+                // 遍历所有选项并创建菜单项
+                options.forEach { selectionOption ->
+                    DropdownMenuItem(
+                        text = { Text(selectionOption) },
+                        onClick = {
+                            // 通过回调函数通知父级新的选中项
+                            onSelectedOptionChanged(selectionOption)
+                            // 收起菜单
+                            expanded = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainPreview() {
+    val snackbarHostState = remember { SnackbarHostState() }
+    HopOntoIslandTheme {
+        MainView(snackbarHostState)
     }
 }

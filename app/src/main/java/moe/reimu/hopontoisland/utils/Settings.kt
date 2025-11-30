@@ -6,6 +6,14 @@ import androidx.core.content.edit
 class Settings(context: Context) {
     private val sp = context.getSharedPreferences("default", Context.MODE_PRIVATE)
 
+    var modeProvider: String?
+        get() = sp.getString("modeProvider", "Gemini")
+        set(value) {
+            sp.edit {
+                putString("modeProvider", value)
+            }
+        }
+
     var modelUrl: String?
         get() = sp.getString("modelUrl", null)
         set(value) {
