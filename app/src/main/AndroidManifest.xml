@@ -60,6 +60,8 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+
+        <meta-data android:name="com.samsung.android.support.ongoing_activity" android:value="true" />
     </application>
 
 </manifest>
