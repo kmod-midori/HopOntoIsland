@@ -70,6 +70,7 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+        <meta-data android:name="com.samsung.android.support.ongoing_activity" android:value="true" />
     </application>
 
 </manifest>
