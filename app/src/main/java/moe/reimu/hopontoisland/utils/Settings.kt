@@ -3,10 +3,18 @@ package moe.reimu.hopontoisland.utils
 import android.content.Context
 import androidx.core.content.edit
 
-class Settings(context: Context) {
+class Settings(context: Context): ISettings {
     private val sp = context.getSharedPreferences("default", Context.MODE_PRIVATE)
 
-    var modelUrl: String?
+    override var modelProvider: String
+        get() = sp.getString("modelProvider", "openai")!!
+        set(value) {
+            sp.edit {
+                putString("modelProvider", value)
+            }
+        }
+
+    override var modelUrl: String?
         get() = sp.getString("modelUrl", null)
         set(value) {
             sp.edit {
@@ -14,7 +22,8 @@ class Settings(context: Context) {
             }
         }
 
-    var modelKey: String?
+
+    override var modelKey: String?
         get() = sp.getString("modelKey", null)
         set(value) {
             sp.edit {
@@ -22,7 +31,7 @@ class Settings(context: Context) {
             }
         }
 
-    var modelName: String?
+    override var modelName: String?
         get() = sp.getString("modelName", null)
         set(value) {
             sp.edit {

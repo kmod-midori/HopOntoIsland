@@ -17,4 +17,8 @@
     <string name="saved_msg">已保存</string>
     <string name="a11y_disabled_label">无障碍服务已禁用</string>
     <string name="a11y_disabled_desc">无法捕获屏幕上显示的内容。</string>
+    <string name="model_provider_openai">OpenAI 兼容</string>
+    <string name="model_provider_gemini">Gemini</string>
+    <string name="model_provier_label">提供商</string>
+    <string name="model_provider_aliyun_cn">阿里云（国内）</string>
 </resources>

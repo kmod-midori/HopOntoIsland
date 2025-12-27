@@ -4,11 +4,14 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.graphics.toColorInt
+import moe.reimu.hopontoisland.ui.theme.DarkColorScheme
+import moe.reimu.hopontoisland.ui.theme.LightColorScheme
 
 const val defaultChannelId = "default"
 const val liveUpdateChannelId = "liveUpdate"
@@ -46,4 +49,22 @@ fun postLiveUpdate(
 fun clearLiveUpdate(context: Context) {
     val notifManager = NotificationManagerCompat.from(context)
     notifManager.cancel(123)
+}
+
+fun postErrorNotification(context: Context, content: String) {
+    val colorScheme =
+        if (context.resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES) {
+            DarkColorScheme
+        } else {
+            LightColorScheme
+        }
+    val errorColor = colorScheme.errorContainer
+    postLiveUpdate(
+        context,
+        "识别失败",
+        "识别失败",
+        content,
+        R.drawable.ic_warning,
+        Color.valueOf(errorColor.red, errorColor.green, errorColor.blue).toArgb()
+    )
 }

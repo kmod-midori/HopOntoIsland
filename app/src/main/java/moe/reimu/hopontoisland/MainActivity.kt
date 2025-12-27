@@ -27,7 +27,11 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -49,7 +53,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -62,7 +68,9 @@ import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import moe.reimu.hopontoisland.llm.ApiModelProvider
 import moe.reimu.hopontoisland.ui.theme.HopOntoIslandTheme
+import moe.reimu.hopontoisland.utils.PreviewSettings
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,47 +88,53 @@ class MainActivity : ComponentActivity() {
         ShortcutManagerCompat.pushDynamicShortcut(this, shortcut.build())
 
         setContent {
-            val snackbarHostState = remember { SnackbarHostState() }
+            MainContent()
+        }
+    }
+}
 
-            HopOntoIslandTheme {
-                Scaffold(
-                    snackbarHost = {
-                        SnackbarHost(
-                            hostState = snackbarHostState,
-                        )
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        TopAppBar(title = { Text(text = stringResource(R.string.app_name)) })
-                    }
-                ) { innerPadding ->
-                    MainView(
-                        snackbarHostState = snackbarHostState,
-                        modifier = Modifier.padding(innerPadding),
-                    )
-                }
+@Composable
+fun MainContent() {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    HopOntoIslandTheme {
+        Scaffold(
+            snackbarHost = {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                )
+            },
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(title = { Text(text = stringResource(R.string.app_name)) })
             }
+        ) { innerPadding ->
+            MainView(
+                snackbarHostState = snackbarHostState,
+                modifier = Modifier.padding(innerPadding),
+            )
         }
     }
 }
 
 @Composable
 fun MainView(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
-    val notificationPermissionState =
-        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+    val notificationPermissionState = rememberPermissionState(
+        Manifest.permission.POST_NOTIFICATIONS
+    )
     val context = LocalContext.current
 
     var canPostPromotedNotifications by remember { mutableStateOf(false) }
-    LifecycleResumeEffect(context) {
-        val notifManager = NotificationManagerCompat.from(context)
-        canPostPromotedNotifications = notifManager.canPostPromotedNotifications()
-        onPauseOrDispose { }
-    }
-
     var serviceEnabled by remember { mutableStateOf(false) }
-    LifecycleResumeEffect(context) {
-        serviceEnabled = TextAccessibilityService.getInstance() != null
-        onPauseOrDispose { }
+    if (!LocalInspectionMode.current) {
+        LifecycleResumeEffect(context) {
+            val notifManager = NotificationManagerCompat.from(context)
+            canPostPromotedNotifications = notifManager.canPostPromotedNotifications()
+
+            serviceEnabled = TextAccessibilityService.getInstance() != null
+
+            onPauseOrDispose { }
+        }
     }
 
     MainList(modifier = modifier) {
@@ -149,9 +163,10 @@ fun MainView(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier
                         containerColor = MaterialTheme.colorScheme.errorContainer
                     ),
                     onClick = {
-                        val intent = Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                            setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
+                        val intent =
+                            Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                                setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
                         context.startActivity(intent)
                     }
                 ) {
@@ -266,14 +281,23 @@ fun MyIcon(imageVector: ImageVector) {
 
 @Composable
 fun ModelSettings(snacbkarHostState: SnackbarHostState) {
-    val app = MyApplication.getInstance()
+    val settings = if (LocalInspectionMode.current) {
+        PreviewSettings
+    } else {
+        MyApplication.getInstance().getSettings()
+    }
     val modelUrlState =
-        rememberTextFieldState(initialText = remember { app.getSettings().modelUrl.orEmpty() })
+        rememberTextFieldState(initialText = remember { settings.modelUrl.orEmpty() })
     val modelKeyState =
-        rememberTextFieldState(initialText = remember { app.getSettings().modelKey.orEmpty() })
+        rememberTextFieldState(initialText = remember { settings.modelKey.orEmpty() })
     val modelNameState =
-        rememberTextFieldState(initialText = remember { app.getSettings().modelName.orEmpty() })
-    val settingsValid = modelUrlState.text.startsWith("http") &&
+        rememberTextFieldState(initialText = remember { settings.modelName.orEmpty() })
+
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    var modelProvider by remember { mutableStateOf(settings.modelProvider) }
+
+    val urlValid = modelUrlState.text.startsWith("http") || modelProvider != "openai"
+    val settingsValid = urlValid &&
             modelKeyState.text.isNotBlank() &&
             modelNameState.text.isNotBlank()
     val scope = rememberCoroutineScope()
@@ -284,12 +308,47 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(16.dp))
-        TextField(
-            state = modelUrlState,
-            lineLimits = TextFieldLineLimits.SingleLine,
-            label = { Text(stringResource(R.string.model_url_label)) },
-            modifier = Modifier.fillMaxWidth(),
-        )
+        ExposedDropdownMenuBox(
+            expanded = dropdownExpanded,
+            onExpandedChange = { dropdownExpanded = it }
+        ) {
+            TextField(
+                label = { Text(stringResource(R.string.model_provier_label)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                readOnly = true,
+                value = ApiModelProvider.apiProviders[modelProvider]?.let { stringResource(it.displayNameRes) } ?: "",
+                onValueChange = {},
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded)
+                },
+            )
+            ExposedDropdownMenu(
+                expanded = dropdownExpanded,
+                onDismissRequest = {
+                    dropdownExpanded = false
+                }
+            ) {
+                ApiModelProvider.apiProviders.forEach {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(it.value.displayNameRes)) },
+                        onClick = {
+                            modelProvider = it.key
+                            dropdownExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+        if (modelProvider == "openai") {
+            TextField(
+                state = modelUrlState,
+                lineLimits = TextFieldLineLimits.SingleLine,
+                label = { Text(stringResource(R.string.model_url_label)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         TextField(
             state = modelKeyState,
             lineLimits = TextFieldLineLimits.SingleLine,
@@ -306,7 +365,7 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
         TextButton(onClick = {
             scope.launch {
                 withContext(Dispatchers.IO) {
-                    val settings = app.getSettings()
+                    settings.modelProvider = modelProvider
                     settings.modelUrl = modelUrlState.text.toString()
                     settings.modelKey = modelKeyState.text.toString()
                     settings.modelName = modelNameState.text.toString()
@@ -319,4 +378,11 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
             Text(stringResource(R.string.save_label))
         }
     }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun MainPreview() {
+    MainContent()
 }

@@ -16,4 +16,8 @@
     <string name="saved_msg">Saved</string>
     <string name="a11y_disabled_label">Accessibility service disabled</string>
     <string name="a11y_disabled_desc">Content displayed on screen will not be captured.</string>
+    <string name="model_provider_openai">OpenAI Compatible</string>
+    <string name="model_provider_gemini">Gemini</string>
+    <string name="model_provier_label">Provider</string>
+    <string name="model_provider_aliyun_cn">Alibaba Cloud (CN)</string>
 </resources>
