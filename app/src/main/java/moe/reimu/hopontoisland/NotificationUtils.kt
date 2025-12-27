@@ -61,8 +61,8 @@ fun postErrorNotification(context: Context, content: String) {
     val errorColor = colorScheme.errorContainer
     postLiveUpdate(
         context,
-        "识别失败",
-        "识别失败",
+        context.getString(R.string.noti_error),
+        context.getString(R.string.noti_error),
         content,
         R.drawable.ic_warning,
         Color.valueOf(errorColor.red, errorColor.green, errorColor.blue).toArgb()

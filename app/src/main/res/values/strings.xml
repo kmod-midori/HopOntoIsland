@@ -20,4 +20,6 @@
     <string name="model_provider_gemini">Gemini</string>
     <string name="model_provier_label">Provider</string>
     <string name="model_provider_aliyun_cn">Alibaba Cloud (CN)</string>
+    <string name="noti_error">Recognition Failed</string>
+    <string name="noti_recognizing">Recognizing</string>
 </resources>

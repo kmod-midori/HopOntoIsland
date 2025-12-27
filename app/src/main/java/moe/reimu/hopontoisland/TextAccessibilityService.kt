@@ -130,8 +130,8 @@ class TextAccessibilityService : AccessibilityService() {
     suspend fun doCapture() {
         postLiveUpdate(
             this,
-            "识别中",
-            "正在识别",
+            getString(R.string.noti_recognizing),
+            getString(R.string.noti_recognizing),
             "",
             R.drawable.ic_search,
             "#3DDC84".toColorInt(),
