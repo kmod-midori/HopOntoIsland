@@ -18,8 +18,8 @@ android {
         applicationId = "moe.reimu.hopontoisland"
         minSdk = 36
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     buildTypes {
