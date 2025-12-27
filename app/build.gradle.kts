@@ -22,24 +22,6 @@ android {
         versionName = "1.1"
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-
-            signingConfig = signingConfigs.findByName("release")
-        }
-    }
-    // https://developer.android.com/build/dependencies#dependency-info-play
-    dependenciesInfo {
-        includeInApk = false
-        includeInBundle = false
-    }
     signingConfigs {
         create("release") {
             file("../signing.properties").let { propFile ->
@@ -57,6 +39,27 @@ android {
             }
         }
     }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+
+            signingConfig = signingConfigs.findByName("release")
+        }
+    }
+
+    // https://developer.android.com/build/dependencies#dependency-info-play
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
