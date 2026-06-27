@@ -11,13 +11,13 @@ plugins {
 android {
     namespace = "moe.reimu.hopontoisland"
     compileSdk {
-        version = release(36)
+        version = release(37)
     }
 
     defaultConfig {
         applicationId = "moe.reimu.hopontoisland"
         minSdk = 36
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 2
         versionName = "1.1"
     }
@@ -86,6 +86,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.accompanist.permissions)
+    implementation(libs.androidx.material3)
 
     implementation(libs.kotlinx.serialization.json)
 
