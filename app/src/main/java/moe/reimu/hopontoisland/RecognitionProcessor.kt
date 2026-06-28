@@ -19,18 +19,27 @@ object RecognitionProcessor {
     private const val TAG = "RecognitionProcessor"
 
     suspend fun recognizeText(text: String): RecognizedEntity? {
-        val systemPromptJson = JSONObject().apply {
-            put("critText", "取餐号/排位号/取件码/车牌号等，不超过10个字符，不带描述")
-            put("title", "通知的简要标题")
-            put("content", "通知详情，包含商品名称、店名、地址、时间等")
-            put("kind", "实时事件的类型，从 dining/taxi/general 中选择一个")
-        }
-
         val systemPrompt = """
             你是一个协助用户高效使用手机的 AI 智能助手，可以从屏幕显示的文字中提取出关键信息。
             
-            分析提供的文本，并创建即时通知，输出必须严格遵循以下 JSON 格式：
-            $systemPromptJson
+            首先，判断给出的内容是取餐码、排队等位还是打车，然后根据对应的分类，以JSON对象格式输出信息。
+            
+            取餐码字段：
+            - critText，页面上醒目展示的取餐码/取餐号（通常为 1-6 位数字或短字母数字组合，如 "A12"、"#056"、"028"）。较长的订单号（如10位以上数字或字母）不是取餐码。
+            - title，取餐门店名称
+            - kind，固定为pickup
+
+            排队等位字段：
+            - critText，页面上醒目展示的排队编号（通常为纯数字、字母+数字、汉字+数字，如“12”、“A120”、“大厅12”）。
+            - title，排队门店名称
+            - kind，固定为queue
+
+            打车字段：
+            - critText，页面上醒目展示的车牌号（一定是省份汉字+字母+数字，如“京AF0236”、“沪AA12347”）
+            - title，打车服务商名称
+            - kind，固定为taxi
+            
+            只输出最匹配的种类的信息，无法确定使用null。不要猜测文本中没有的信息。仅返回JSON，不要输出Markdown、代码块或解释性文本。
         """.trimIndent()
 
         val modelResponse = ApiModelProvider.generate(
