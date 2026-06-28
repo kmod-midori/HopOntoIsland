@@ -6,15 +6,22 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
 import android.graphics.Rect
 import android.util.Log
+import android.view.Display
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -23,6 +30,13 @@ import kotlin.time.Duration
 @SuppressLint("AccessibilityPolicy")
 class TextAccessibilityService : AccessibilityService() {
     private lateinit var broadcastReceiver: BroadcastReceiver
+
+    private val serviceScope: CoroutineScope = CoroutineScope(
+        Dispatchers.IO + SupervisorJob() +
+                CoroutineExceptionHandler { _, err ->
+                    Log.e(TAG, "Uncaught exception", err)
+                },
+    )
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
 
@@ -83,6 +97,7 @@ class TextAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        serviceScope.cancel("onDestroy")
         unregisterReceiver(broadcastReceiver)
         instance = null
     }
@@ -108,9 +123,8 @@ class TextAccessibilityService : AccessibilityService() {
         return textItems.map { it.first }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     fun startCapture(delayDuration: Duration) {
-        (GlobalScope + Dispatchers.IO).launch {
+        serviceScope.launch {
             delay(delayDuration)
             try {
                 doCapture()
@@ -123,8 +137,23 @@ class TextAccessibilityService : AccessibilityService() {
         }
     }
 
-    fun closeNotificationPanel(): Boolean {
-        return performGlobalAction(GLOBAL_ACTION_DISMISS_NOTIFICATION_SHADE)
+    suspend fun takeScreenshot(): Bitmap {
+        val deferred = CompletableDeferred<ScreenshotResult>()
+        takeScreenshot(Display.DEFAULT_DISPLAY, mainExecutor, object : TakeScreenshotCallback {
+            override fun onFailure(p0: Int) {
+                deferred.completeExceptionally(RuntimeException("Screenshot failed with error $p0"))
+            }
+
+            override fun onSuccess(p0: ScreenshotResult) {
+                deferred.complete(p0)
+            }
+        })
+        val result = deferred.await()
+        try {
+            return Bitmap.wrapHardwareBuffer(result.hardwareBuffer, result.colorSpace)!!
+        } finally {
+            result.hardwareBuffer.close()
+        }
     }
 
     suspend fun doCapture() {
@@ -142,7 +171,13 @@ class TextAccessibilityService : AccessibilityService() {
         } catch (e: Exception) {
             throw RuntimeException("Failed to obtain a11y text", e)
         }
-        Log.i(TAG, "text = [$dumpedText]")
+        val dumpedImage = try {
+            takeScreenshot()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to capture screenshot", e)
+            null
+        }
+        Log.i(TAG, "text = [$dumpedText], image = $dumpedImage")
 
         val entity = RecognitionProcessor.recognizeText(dumpedText)
             ?: throw RuntimeException("Failed to recognize entity")

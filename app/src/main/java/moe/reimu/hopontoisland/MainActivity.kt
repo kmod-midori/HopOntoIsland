@@ -42,10 +42,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,47 +55,52 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.toColorInt
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import moe.reimu.hopontoisland.llm.ApiModelProvider
 import moe.reimu.hopontoisland.ui.theme.HopOntoIslandTheme
-import moe.reimu.hopontoisland.utils.PreviewSettings
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val shortcut = ShortcutInfoCompat.Builder(this, "capture")
-            .setShortLabel(getString(R.string.capture_shortcut_label))
-            .setLongLabel(getString(R.string.capture_shortcut_label))
-            .setIcon(IconCompat.createWithResource(this, R.drawable.ic_search_white))
-            .setIntent(Intent(this, CaptureActivity::class.java).apply {
-                action = Intent.ACTION_VIEW
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
-            })
-        ShortcutManagerCompat.pushDynamicShortcut(this, shortcut.build())
+        initializeShortcut()
 
         setContent {
             MainContent()
         }
     }
+
+    fun initializeShortcut() {
+        val shortcut = ShortcutInfoCompat.Builder(this, "capture")
+            .setShortLabel(getString(R.string.capture_shortcut_label))
+            .setLongLabel(getString(R.string.capture_shortcut_label))
+            .setIcon(IconCompat.createWithResource(this, R.drawable.ic_search_white))
+            .setIntent(CaptureActivity.getCaptureIntent(this, 500.milliseconds))
+        ShortcutManagerCompat.pushDynamicShortcut(this, shortcut.build())
+    }
 }
 
 @Composable
 fun MainContent() {
+    val viewModel: MainViewModel = viewModel()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.snackbarEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     HopOntoIslandTheme {
         Scaffold(
@@ -110,7 +115,7 @@ fun MainContent() {
             }
         ) { innerPadding ->
             MainView(
-                snackbarHostState = snackbarHostState,
+                viewModel = viewModel,
                 modifier = Modifier.padding(innerPadding),
             )
         }
@@ -118,23 +123,23 @@ fun MainContent() {
 }
 
 @Composable
-fun MainView(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier) {
+fun MainView(
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel,
+) {
     val notificationPermissionState = rememberPermissionState(
         Manifest.permission.POST_NOTIFICATIONS
     )
     val context = LocalContext.current
 
-    var canPostPromotedNotifications by remember { mutableStateOf(false) }
-    var serviceEnabled by remember { mutableStateOf(false) }
-    if (!LocalInspectionMode.current) {
-        LifecycleResumeEffect(context) {
-            val notifManager = NotificationManagerCompat.from(context)
-            canPostPromotedNotifications = notifManager.canPostPromotedNotifications()
+    val canPostPromotedNotifications by viewModel.canPostPromotedNotifications.collectAsStateWithLifecycle()
+    val serviceEnabled by viewModel.serviceEnabled.collectAsStateWithLifecycle()
 
-            serviceEnabled = TextAccessibilityService.getInstance() != null
+    LifecycleResumeEffect(context) {
+        viewModel.refreshNotificationCapability()
+        viewModel.refreshServiceStatus()
 
-            onPauseOrDispose { }
-        }
+        onPauseOrDispose { }
     }
 
     MainList(modifier = modifier) {
@@ -215,7 +220,7 @@ fun MainView(snackbarHostState: SnackbarHostState, modifier: Modifier = Modifier
         }
         item {
             DefaultCard {
-                ModelSettings(snacbkarHostState = snackbarHostState)
+                ModelSettings(viewModel = viewModel)
             }
         }
     }
@@ -280,27 +285,27 @@ fun MyIcon(imageVector: ImageVector) {
 }
 
 @Composable
-fun ModelSettings(snacbkarHostState: SnackbarHostState) {
-    val settings = if (LocalInspectionMode.current) {
-        PreviewSettings
-    } else {
-        MyApplication.getInstance().getSettings()
-    }
-    val modelUrlState =
-        rememberTextFieldState(initialText = remember { settings.modelUrl.orEmpty() })
-    val modelKeyState =
-        rememberTextFieldState(initialText = remember { settings.modelKey.orEmpty() })
-    val modelNameState =
-        rememberTextFieldState(initialText = remember { settings.modelName.orEmpty() })
+fun ModelSettings(
+    viewModel: MainViewModel,
+) {
+    val modelProvider by viewModel.modelProvider.collectAsStateWithLifecycle()
+    val initialModelUrl by viewModel.modelUrl.collectAsStateWithLifecycle()
+    val initialModelKey by viewModel.modelKey.collectAsStateWithLifecycle()
+    val initialModelName by viewModel.modelName.collectAsStateWithLifecycle()
+
+    val modelUrlState = rememberTextFieldState(initialText = initialModelUrl)
+    val modelKeyState = rememberTextFieldState(initialText = initialModelKey)
+    val modelNameState = rememberTextFieldState(initialText = initialModelName)
 
     var dropdownExpanded by remember { mutableStateOf(false) }
-    var modelProvider by remember { mutableStateOf(settings.modelProvider) }
 
     val urlValid = modelUrlState.text.startsWith("http") || modelProvider != "openai"
-    val settingsValid = urlValid &&
-            modelKeyState.text.isNotBlank() &&
-            modelNameState.text.isNotBlank()
-    val scope = rememberCoroutineScope()
+    val settingsValid =
+        urlValid && modelKeyState.text.isNotBlank() && modelNameState.text.isNotBlank()
+
+    val modelProviderName =
+        ApiModelProvider.apiProviders[modelProvider]?.let { stringResource(it.displayNameRes) }
+            .orEmpty()
 
     Column {
         Text(
@@ -318,7 +323,7 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
                     .fillMaxWidth()
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                 readOnly = true,
-                value = ApiModelProvider.apiProviders[modelProvider]?.let { stringResource(it.displayNameRes) } ?: "",
+                value = modelProviderName,
                 onValueChange = {},
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded)
@@ -334,7 +339,7 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
                     DropdownMenuItem(
                         text = { Text(stringResource(it.value.displayNameRes)) },
                         onClick = {
-                            modelProvider = it.key
+                            viewModel.updateModelProvider(it.key)
                             dropdownExpanded = false
                         }
                     )
@@ -363,17 +368,11 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         TextButton(onClick = {
-            scope.launch {
-                withContext(Dispatchers.IO) {
-                    settings.modelProvider = modelProvider
-                    settings.modelUrl = modelUrlState.text.toString()
-                    settings.modelKey = modelKeyState.text.toString()
-                    settings.modelName = modelNameState.text.toString()
-                }
-                snacbkarHostState.showSnackbar(
-                    MyApplication.getInstance().getString(R.string.saved_msg)
-                )
-            }
+            viewModel.saveSettings(
+                url = modelUrlState.text.toString(),
+                key = modelKeyState.text.toString(),
+                name = modelNameState.text.toString(),
+            )
         }, enabled = settingsValid) {
             Text(stringResource(R.string.save_label))
         }
@@ -384,5 +383,8 @@ fun ModelSettings(snacbkarHostState: SnackbarHostState) {
 @Preview(showBackground = true)
 @Composable
 fun MainPreview() {
-    MainContent()
+    val vm = viewModel<PreviewMainViewModel>()
+    HopOntoIslandTheme {
+        MainView(viewModel = vm)
+    }
 }

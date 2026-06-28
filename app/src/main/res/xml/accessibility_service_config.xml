@@ -4,5 +4,6 @@
     android:accessibilityFeedbackType="feedbackVisual"
     android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
     android:canRetrieveWindowContent="true"
+    android:canTakeScreenshot="true"
     android:notificationTimeout="100"
     android:settingsActivity="moe.reimu.hopontoisland.MainActivity" />
