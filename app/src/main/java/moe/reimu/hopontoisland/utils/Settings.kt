@@ -3,6 +3,7 @@ package moe.reimu.hopontoisland.utils
 import android.content.Context
 import androidx.core.content.edit
 import moe.reimu.hopontoisland.CaptureMethod
+import moe.reimu.hopontoisland.NotificationMethod
 
 class Settings(context: Context): ISettings {
     private val sp = context.getSharedPreferences("default", Context.MODE_PRIVATE)
@@ -45,6 +46,14 @@ class Settings(context: Context): ISettings {
         set(value) {
             sp.edit {
                 putString("captureMethod", value.key)
+            }
+        }
+
+    override var notificationMethod: NotificationMethod
+        get() = NotificationMethod.fromKey(sp.getString("notificationMethod", null) ?: NotificationMethod.DEFAULT.key)
+        set(value) {
+            sp.edit {
+                putString("notificationMethod", value.key)
             }
         }
 }

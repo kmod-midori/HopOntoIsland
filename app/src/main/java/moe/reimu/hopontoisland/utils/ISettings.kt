@@ -1,6 +1,7 @@
 package moe.reimu.hopontoisland.utils
 
 import moe.reimu.hopontoisland.CaptureMethod
+import moe.reimu.hopontoisland.NotificationMethod
 
 interface ISettings {
     var modelProvider: String
@@ -8,4 +9,5 @@ interface ISettings {
     var modelUrl: String?
     var modelName: String?
     var captureMethod: CaptureMethod
+    var notificationMethod: NotificationMethod
 }

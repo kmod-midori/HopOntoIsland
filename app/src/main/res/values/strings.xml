@@ -30,4 +30,9 @@
     <string name="capture_method_media_projection_image">Media Projection Image</string>
     <string name="capture_method_shizuku_image">Shizuku Image</string>
     <string name="capture_method_root_image">Root Image</string>
+    <string name="notification_label">Notification</string>
+    <string name="notification_method_label">Notification Method</string>
+    <string name="notification_method_native_live_updates">Native Live Updates</string>
+    <string name="notification_method_hyperos_dynamic_islands">HyperOS Dynamic Islands</string>
+    <string name="error">Error</string>
 </resources>

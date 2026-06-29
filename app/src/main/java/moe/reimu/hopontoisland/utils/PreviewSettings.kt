@@ -1,6 +1,7 @@
 package moe.reimu.hopontoisland.utils
 
 import moe.reimu.hopontoisland.CaptureMethod
+import moe.reimu.hopontoisland.NotificationMethod
 
 @Suppress("UNUSED_PARAMETER")
 object PreviewSettings: ISettings {
@@ -18,5 +19,8 @@ object PreviewSettings: ISettings {
         set(value) {}
     override var captureMethod: CaptureMethod
         get() = CaptureMethod.DEFAULT
+        set(value) {}
+    override var notificationMethod: NotificationMethod
+        get() = NotificationMethod.DEFAULT
         set(value) {}
 }

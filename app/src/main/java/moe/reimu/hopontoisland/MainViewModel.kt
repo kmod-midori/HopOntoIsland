@@ -16,7 +16,7 @@ import moe.reimu.hopontoisland.utils.ISettings
 import moe.reimu.hopontoisland.utils.PreviewSettings
 
 open class MainViewModel(
-    settings: ISettings = MyApplication.getInstance().getSettings(),
+    private val settings: ISettings = MyApplication.getInstance().getSettings(),
 ) : ViewModel() {
 
     // --- Model settings (editable, backed by SharedPreferences) ---
@@ -34,6 +34,9 @@ open class MainViewModel(
 
     private val _captureMethod = MutableStateFlow(settings.captureMethod)
     val captureMethod: StateFlow<CaptureMethod> = _captureMethod.asStateFlow()
+
+    private val _notificationMethod = MutableStateFlow(settings.notificationMethod)
+    val notificationMethod: StateFlow<NotificationMethod> = _notificationMethod.asStateFlow()
 
     // --- Runtime system status (checked on each resume) ---
     private val _canPostPromotedNotifications = MutableStateFlow(false)
@@ -55,6 +58,12 @@ open class MainViewModel(
 
     fun updateCaptureMethod(method: CaptureMethod) {
         _captureMethod.value = method
+        settings.captureMethod = method
+    }
+
+    fun updateNotificationMethod(method: NotificationMethod) {
+        _notificationMethod.value = method
+        settings.notificationMethod = method
     }
 
     open fun refreshNotificationCapability() {
@@ -69,12 +78,10 @@ open class MainViewModel(
     fun saveSettings(url: String, key: String, name: String) {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val s = MyApplication.getInstance().getSettings()
-                s.modelProvider = _modelProvider.value
-                s.modelUrl = url
-                s.modelKey = key
-                s.modelName = name
-                s.captureMethod = _captureMethod.value
+                settings.modelProvider = _modelProvider.value
+                settings.modelUrl = url
+                settings.modelKey = key
+                settings.modelName = name
             }
             _snackbarEvents.emit(
                 MyApplication.getInstance().getString(R.string.saved_msg)

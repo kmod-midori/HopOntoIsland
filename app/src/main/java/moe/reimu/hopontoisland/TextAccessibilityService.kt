@@ -160,7 +160,7 @@ class TextAccessibilityService : AccessibilityService() {
         postLiveUpdate(
             this,
             getString(R.string.noti_recognizing),
-            getString(R.string.noti_recognizing),
+            "",
             "",
             R.drawable.ic_search,
             "#3DDC84".toColorInt(),
@@ -183,7 +183,7 @@ class TextAccessibilityService : AccessibilityService() {
             ?: throw RuntimeException("Failed to recognize entity")
 
         val icon = when (entity.kind) {
-            "dining" -> {
+            "pickup" -> {
                 R.drawable.ic_dining
             }
 
@@ -199,7 +199,7 @@ class TextAccessibilityService : AccessibilityService() {
         postLiveUpdate(
             this,
             entity.critText,
-            "${entity.critText} | ${entity.title}",
+            entity.title,
             entity.content.orEmpty(),
             icon,
             "#3DDC84".toColorInt()

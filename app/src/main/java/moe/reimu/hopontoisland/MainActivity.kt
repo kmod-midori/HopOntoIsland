@@ -6,6 +6,7 @@ import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
@@ -130,36 +131,19 @@ fun MainView(
     val notificationPermissionState = rememberPermissionState(
         Manifest.permission.POST_NOTIFICATIONS
     )
-    val context = LocalContext.current
-
     val canPostPromotedNotifications by viewModel.canPostPromotedNotifications.collectAsStateWithLifecycle()
+    val notificationMethod by viewModel.notificationMethod.collectAsStateWithLifecycle()
+    val serviceEnabled by viewModel.serviceEnabled.collectAsStateWithLifecycle()
+    val captureMethod by viewModel.captureMethod.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LifecycleResumeEffect(context) {
         viewModel.refreshNotificationCapability()
         viewModel.refreshServiceStatus()
-
         onPauseOrDispose { }
     }
 
     MainList(modifier = modifier) {
-        if (!canPostPromotedNotifications) {
-            item {
-                DefaultCard(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ) {
-                    MyIcon(ImageVector.vectorResource(R.drawable.ic_warning))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            stringResource(R.string.cannot_post_label),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(stringResource(R.string.cannot_post_desc))
-                    }
-                }
-            }
-        }
         item {
             if (notificationPermissionState.status.isGranted) {
                 DefaultCard(onClick = {
@@ -192,9 +176,57 @@ fun MainView(
                 }
             }
         }
+        if (captureMethod.requiresAccessibility && !serviceEnabled) {
+            item {
+                DefaultCard(
+                    onClick = {
+                        val intent =
+                            Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                                setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        context.startActivity(intent)
+                    },
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                    ),
+                ) {
+                    MyIcon(ImageVector.vectorResource(R.drawable.ic_warning))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.a11y_disabled_label),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(stringResource(R.string.a11y_disabled_desc))
+                    }
+                }
+            }
+        }
+        if (!canPostPromotedNotifications && notificationMethod == NotificationMethod.NATIVE_LIVE_UPDATES) {
+            item {
+                DefaultCard(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    MyIcon(ImageVector.vectorResource(R.drawable.ic_warning))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.cannot_post_label),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(stringResource(R.string.cannot_post_desc))
+                    }
+                }
+            }
+        }
         item {
             DefaultCard {
                 CaptureSettings(viewModel = viewModel)
+            }
+        }
+        item {
+            DefaultCard {
+                NotificationSettings(viewModel = viewModel)
             }
         }
         item {
@@ -367,12 +399,8 @@ fun CaptureSettings(
     viewModel: MainViewModel,
 ) {
     val captureMethod by viewModel.captureMethod.collectAsStateWithLifecycle()
-    val serviceEnabled by viewModel.serviceEnabled.collectAsStateWithLifecycle()
     val captureMethodName = stringResource(captureMethod.displayNameRes)
     var dropdownExpanded by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-
-    val needsAccessibility = captureMethod.requiresAccessibility
 
     Column {
         Text(
@@ -380,30 +408,6 @@ fun CaptureSettings(
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(16.dp))
-        if (needsAccessibility && !serviceEnabled) {
-            DefaultCard(
-                onClick = {
-                    val intent =
-                        Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                            setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                    context.startActivity(intent)
-                },
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                ),
-            ) {
-                MyIcon(ImageVector.vectorResource(R.drawable.ic_warning))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        stringResource(R.string.a11y_disabled_label),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(stringResource(R.string.a11y_disabled_desc))
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
         ExposedDropdownMenuBox(
             expanded = dropdownExpanded,
             onExpandedChange = { dropdownExpanded = it }
@@ -429,6 +433,55 @@ fun CaptureSettings(
                         text = { Text(stringResource(method.displayNameRes)) },
                         onClick = {
                             viewModel.updateCaptureMethod(method)
+                            dropdownExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun NotificationSettings(
+    viewModel: MainViewModel,
+) {
+    val notificationMethod by viewModel.notificationMethod.collectAsStateWithLifecycle()
+    val notificationMethodName = stringResource(notificationMethod.displayNameRes)
+    var dropdownExpanded by remember { mutableStateOf(false) }
+
+    Column {
+        Text(
+            stringResource(R.string.notification_label),
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        ExposedDropdownMenuBox(
+            expanded = dropdownExpanded,
+            onExpandedChange = { dropdownExpanded = it }
+        ) {
+            TextField(
+                label = { Text(stringResource(R.string.notification_method_label)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                readOnly = true,
+                value = notificationMethodName,
+                onValueChange = {},
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded)
+                },
+            )
+            ExposedDropdownMenu(
+                expanded = dropdownExpanded,
+                onDismissRequest = { dropdownExpanded = false }
+            ) {
+                NotificationMethod.entries.forEach { method ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(method.displayNameRes)) },
+                        enabled = method.available,
+                        onClick = {
+                            viewModel.updateNotificationMethod(method)
                             dropdownExpanded = false
                         }
                     )
