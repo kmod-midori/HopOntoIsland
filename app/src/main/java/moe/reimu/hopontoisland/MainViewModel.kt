@@ -32,6 +32,9 @@ open class MainViewModel(
     private val _modelName = MutableStateFlow(settings.modelName.orEmpty())
     val modelName: StateFlow<String> = _modelName.asStateFlow()
 
+    private val _captureMethod = MutableStateFlow(settings.captureMethod)
+    val captureMethod: StateFlow<CaptureMethod> = _captureMethod.asStateFlow()
+
     // --- Runtime system status (checked on each resume) ---
     private val _canPostPromotedNotifications = MutableStateFlow(false)
     val canPostPromotedNotifications: StateFlow<Boolean> =
@@ -48,6 +51,10 @@ open class MainViewModel(
 
     fun updateModelProvider(provider: String) {
         _modelProvider.value = provider
+    }
+
+    fun updateCaptureMethod(method: CaptureMethod) {
+        _captureMethod.value = method
     }
 
     open fun refreshNotificationCapability() {
@@ -67,6 +74,7 @@ open class MainViewModel(
                 s.modelUrl = url
                 s.modelKey = key
                 s.modelName = name
+                s.captureMethod = _captureMethod.value
             }
             _snackbarEvents.emit(
                 MyApplication.getInstance().getString(R.string.saved_msg)

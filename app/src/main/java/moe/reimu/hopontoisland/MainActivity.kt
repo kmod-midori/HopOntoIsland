@@ -133,7 +133,6 @@ fun MainView(
     val context = LocalContext.current
 
     val canPostPromotedNotifications by viewModel.canPostPromotedNotifications.collectAsStateWithLifecycle()
-    val serviceEnabled by viewModel.serviceEnabled.collectAsStateWithLifecycle()
 
     LifecycleResumeEffect(context) {
         viewModel.refreshNotificationCapability()
@@ -157,31 +156,6 @@ fun MainView(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(stringResource(R.string.cannot_post_desc))
-                    }
-                }
-            }
-        }
-        if (!serviceEnabled) {
-            item {
-                DefaultCard(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
-                    onClick = {
-                        val intent =
-                            Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
-                                setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                        context.startActivity(intent)
-                    }
-                ) {
-                    MyIcon(ImageVector.vectorResource(R.drawable.ic_warning))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            stringResource(R.string.a11y_disabled_label),
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(stringResource(R.string.a11y_disabled_desc))
                     }
                 }
             }
@@ -216,6 +190,11 @@ fun MainView(
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
+            }
+        }
+        item {
+            DefaultCard {
+                CaptureSettings(viewModel = viewModel)
             }
         }
         item {
@@ -351,6 +330,7 @@ fun ModelSettings(
                 state = modelUrlState,
                 lineLimits = TextFieldLineLimits.SingleLine,
                 label = { Text(stringResource(R.string.model_url_label)) },
+                placeholder = { Text("https://your.ai/v1/completions") },
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -358,12 +338,14 @@ fun ModelSettings(
             state = modelKeyState,
             lineLimits = TextFieldLineLimits.SingleLine,
             label = { Text(stringResource(R.string.model_key_label)) },
+            placeholder = { Text("sk-xxxx") },
             modifier = Modifier.fillMaxWidth()
         )
         TextField(
             state = modelNameState,
             lineLimits = TextFieldLineLimits.SingleLine,
             label = { Text(stringResource(R.string.model_name_label)) },
+            placeholder = { Text("your-model-flash") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -379,6 +361,82 @@ fun ModelSettings(
     }
 }
 
+
+@Composable
+fun CaptureSettings(
+    viewModel: MainViewModel,
+) {
+    val captureMethod by viewModel.captureMethod.collectAsStateWithLifecycle()
+    val serviceEnabled by viewModel.serviceEnabled.collectAsStateWithLifecycle()
+    val captureMethodName = stringResource(captureMethod.displayNameRes)
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val needsAccessibility = captureMethod.requiresAccessibility
+
+    Column {
+        Text(
+            stringResource(R.string.capture_label),
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        if (needsAccessibility && !serviceEnabled) {
+            DefaultCard(
+                onClick = {
+                    val intent =
+                        Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                            setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                    context.startActivity(intent)
+                },
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                ),
+            ) {
+                MyIcon(ImageVector.vectorResource(R.drawable.ic_warning))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.a11y_disabled_label),
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(stringResource(R.string.a11y_disabled_desc))
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        ExposedDropdownMenuBox(
+            expanded = dropdownExpanded,
+            onExpandedChange = { dropdownExpanded = it }
+        ) {
+            TextField(
+                label = { Text(stringResource(R.string.capture_method_label)) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                readOnly = true,
+                value = captureMethodName,
+                onValueChange = {},
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = dropdownExpanded)
+                },
+            )
+            ExposedDropdownMenu(
+                expanded = dropdownExpanded,
+                onDismissRequest = { dropdownExpanded = false }
+            ) {
+                CaptureMethod.entries.forEach { method ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(method.displayNameRes)) },
+                        onClick = {
+                            viewModel.updateCaptureMethod(method)
+                            dropdownExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable

@@ -22,4 +22,12 @@
     <string name="model_provider_aliyun_cn">Alibaba Cloud (CN)</string>
     <string name="noti_error">Recognition Failed</string>
     <string name="noti_recognizing">Recognizing</string>
+    <string name="capture_label">Capture</string>
+    <string name="capture_method_label">Capture Method</string>
+    <string name="capture_method_accessibility_text">Accessibility Text</string>
+    <string name="capture_method_accessibility_image">Accessibility Image</string>
+    <string name="capture_method_accessibility_text_image">Accessibility Text + Image</string>
+    <string name="capture_method_media_projection_image">Media Projection Image</string>
+    <string name="capture_method_shizuku_image">Shizuku Image</string>
+    <string name="capture_method_root_image">Root Image</string>
 </resources>

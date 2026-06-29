@@ -2,6 +2,7 @@ package moe.reimu.hopontoisland.utils
 
 import android.content.Context
 import androidx.core.content.edit
+import moe.reimu.hopontoisland.CaptureMethod
 
 class Settings(context: Context): ISettings {
     private val sp = context.getSharedPreferences("default", Context.MODE_PRIVATE)
@@ -36,6 +37,14 @@ class Settings(context: Context): ISettings {
         set(value) {
             sp.edit {
                 putString("modelName", value)
+            }
+        }
+
+    override var captureMethod: CaptureMethod
+        get() = CaptureMethod.fromKey(sp.getString("captureMethod", null) ?: CaptureMethod.DEFAULT.key)
+        set(value) {
+            sp.edit {
+                putString("captureMethod", value.key)
             }
         }
 }

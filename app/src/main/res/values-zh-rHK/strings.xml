@@ -19,6 +19,16 @@
     <string name="a11y_disabled_desc">無法擷取螢幕上顯示的內容。</string>
     <string name="noti_error">識別失敗</string>
     <string name="noti_recognizing">識別中</string>
+    <string name="model_provider_openai">OpenAI 兼容</string>
     <string name="model_provider_gemini">Gemini</string>
     <string name="model_provier_label">提供者</string>
+    <string name="model_provider_aliyun_cn">阿里雲（國內）</string>
+    <string name="capture_label">擷取</string>
+    <string name="capture_method_label">擷取方式</string>
+    <string name="capture_method_accessibility_text">無障礙文本</string>
+    <string name="capture_method_accessibility_image">無障礙圖像</string>
+    <string name="capture_method_accessibility_text_image">無障礙文本 + 圖像</string>
+    <string name="capture_method_media_projection_image">媒體投影圖像</string>
+    <string name="capture_method_shizuku_image">Shizuku 圖像</string>
+    <string name="capture_method_root_image">Root 圖像</string>
 </resources>
